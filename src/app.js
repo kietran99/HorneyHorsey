@@ -23,6 +23,10 @@
  ****************************************************************************/
 // import { PlaygroundLayer } from './PlaygroundLayer';
 
+// const x = require('bar');
+// x.foo();
+
+const BASE_SCALE = 3;
 const PIXELS_PER_UNIT = 48;
 const PLATFORMS_PER_SIDE = 6;
 const H_PLATFORM_DIST = 16;
@@ -57,113 +61,88 @@ const PlaygroundLayer = cc.Layer.extend({
     },
 
     initAllPlatforms: function(screenSize, platformSize) {
-        const makePlatform = color => (x, y) => this.drawSprite(
+        const makePlatform = color => (x, y) => drawSprite(
             res.Platform_png, 
             { x: x, y: y, width: platformSize, height: platformSize }, 
             color);
 
-        // const botLeft = this.initPlatformQuadrant(screenSize, platformSize, makePlatform('#d9e027'));
-        const botLeft = this.initBotLeftPlatforms(screenSize, platformSize, makePlatform('#d9e027'));
-        const topLeft = this.initTopLeftPlatforms(screenSize, platformSize, makePlatform('#2291e0'));
-        const topRight = this.initTopRightPlatforms(screenSize, platformSize, makePlatform('#e05222'));
-        const botRight = this.initBotRightPlatforms(screenSize, platformSize, makePlatform('#22e062'));
+        const botLeft = this.initPlatformQuadrant(
+            cc.p(platformSize, screenSize.height / 2),
+            
+            idx => cc.p(
+                platformSize * (idx + 1) + H_PLATFORM_DIST * idx, 
+                screenSize.height / 2 - platformSize - V_PLATFORM_DIST),
+            
+            (lastPos, idx) => cc.p(lastPos.x, lastPos.y - (platformSize + V_PLATFORM_DIST) * (idx + 1)),
+
+            makePlatform('#d9e027'));
+        
+        const tlMaxY = screenSize.height / 2 + platformSize * (PLATFORMS_PER_SIDE) + V_PLATFORM_DIST * PLATFORMS_PER_SIDE;
+        const topLeft = this.initPlatformQuadrant(
+            cc.p(platformSize * (PLATFORMS_PER_SIDE + 1) + H_PLATFORM_DIST * PLATFORMS_PER_SIDE, tlMaxY),
+
+            idx => cc.p(
+                platformSize * (PLATFORMS_PER_SIDE) + H_PLATFORM_DIST * (PLATFORMS_PER_SIDE - 1), 
+                tlMaxY - (platformSize + V_PLATFORM_DIST) * idx),
+
+            (lastPos, idx) => cc.p(lastPos.x - (platformSize + H_PLATFORM_DIST) * (idx + 1), lastPos.y),
+
+            makePlatform('#2291e0'));
+
+        const trMaxX = platformSize * (2 * PLATFORMS_PER_SIDE + 1) + H_PLATFORM_DIST * (2 * PLATFORMS_PER_SIDE);
+        const topRight = this.initPlatformQuadrant(
+            cc.p(trMaxX, screenSize.height / 2),
+
+            idx => cc.p(
+                trMaxX - (platformSize + H_PLATFORM_DIST) * idx, 
+                screenSize.height / 2 + platformSize + V_PLATFORM_DIST),
+
+            (lastPos, idx) => cc.p(lastPos.x, lastPos.y + (platformSize + V_PLATFORM_DIST) * (idx + 1)),
+
+            makePlatform('#e05222'));
+
+        const brMinX = platformSize * (PLATFORMS_PER_SIDE + 1) + H_PLATFORM_DIST * PLATFORMS_PER_SIDE;
+        const brMinY = screenSize.height / 2 - platformSize * PLATFORMS_PER_SIDE;
+        const botRight = this.initPlatformQuadrant(
+            cc.p(brMinX, brMinY),
+
+            idx => cc.p(
+                brMinX + platformSize + H_PLATFORM_DIST, 
+                brMinY + (platformSize + V_PLATFORM_DIST) * idx),
+
+            (lastPos, idx) => cc.p(lastPos.x + (platformSize + H_PLATFORM_DIST) * (idx + 1), lastPos.y),
+
+            makePlatform('#22e062'));
 
         const allPlatforms = botLeft.concat(topLeft).concat(topRight).concat(botRight);
         return allPlatforms;
     },
 
-    initPlatformQuadrant: function(screenSize, platformSize, makePlatform) {
-        var platforms = 
-            [makePlatform(platformSize, screenSize.height / 2)]
-            .concat([...Array(PLATFORMS_PER_SIDE).keys()]
-                    .map(idx => 
-                        makePlatform(
-                            platformSize * (idx + 1) + H_PLATFORM_DIST * idx, 
-                            screenSize.height / 2 - platformSize - V_PLATFORM_DIST)
-                        ));
 
-        const lastX = platforms[platforms.length - 1].getPositionX();
+    /*
+    getLongSidePlatformPos: (idx) => cc.Point
+    getShortSidePlatformPos: (lastPos, idx) => cc.Point
+    makePlatform: (x, y) => cc.Sprite
+    */
 
-        return platforms.concat(
-            [...Array(PLATFORMS_PER_SIDE - 1).keys()]
-            .map(idx => makePlatform(lastX, screenSize.height / 2 - platformSize - V_PLATFORM_DIST - platformSize * (idx + 1))));
-    },
-
-    initBotLeftPlatforms: function(screenSize, platformSize, makePlatform) {
+    initPlatformQuadrant: function(singlePlatformPos, getLongSidePlatformsPos, getShortSidePlatformPos, makePlatform) {
         const platforms = 
-            [makePlatform(platformSize, screenSize.height / 2)]
+            [makePlatform(singlePlatformPos.x, singlePlatformPos.y)]
             .concat([...Array(PLATFORMS_PER_SIDE).keys()]
-                    .map(idx => 
-                        makePlatform(
-                            platformSize * (idx + 1) + H_PLATFORM_DIST * idx, 
-                            screenSize.height / 2 - platformSize - V_PLATFORM_DIST)
-                        ));
+                    .map(idx => {
+                        const pt = getLongSidePlatformsPos(idx);
+                        return makePlatform(pt.x, pt.y);
+                        }
+                    ));
 
         const lastPos = platforms[platforms.length - 1].getPosition();
 
         return platforms.concat(
             [...Array(PLATFORMS_PER_SIDE - 1).keys()]
-            .map(idx => makePlatform(lastPos.x, lastPos.y - (platformSize + V_PLATFORM_DIST) * (idx + 1))));
-    },
-
-    initTopLeftPlatforms: function(screenSize, platformSize, makePlatform) {
-        const maxY = screenSize.height / 2 + platformSize * (PLATFORMS_PER_SIDE) + V_PLATFORM_DIST * PLATFORMS_PER_SIDE;
-
-        const platforms = 
-            [makePlatform(
-                platformSize * (PLATFORMS_PER_SIDE + 1) + H_PLATFORM_DIST * PLATFORMS_PER_SIDE, 
-                maxY)]
-            .concat([...Array(PLATFORMS_PER_SIDE).keys()]
-                    .map(idx => 
-                        makePlatform(
-                            platformSize * (PLATFORMS_PER_SIDE) + H_PLATFORM_DIST * (PLATFORMS_PER_SIDE - 1), 
-                            maxY - (platformSize + V_PLATFORM_DIST) * idx)
-                        ));
-
-        const lastPos = platforms[platforms.length - 1].getPosition();
-
-        return platforms.concat(
-            [...Array(PLATFORMS_PER_SIDE - 1).keys()]
-            .map(idx => makePlatform(lastPos.x - (platformSize + H_PLATFORM_DIST) * (idx + 1), lastPos.y)));
-    },
-
-    initTopRightPlatforms: function(screenSize, platformSize, makePlatform) {
-        const maxX = platformSize * (2 * PLATFORMS_PER_SIDE + 1) + H_PLATFORM_DIST * (2 * PLATFORMS_PER_SIDE);
-
-        const platforms = 
-            [makePlatform(maxX, screenSize.height / 2)]
-            .concat([...Array(PLATFORMS_PER_SIDE).keys()]
-                    .map(idx => 
-                        makePlatform(
-                            maxX - (platformSize + H_PLATFORM_DIST) * idx, 
-                            screenSize.height / 2 + platformSize + V_PLATFORM_DIST)
-                        ));
-
-        const lastPos = platforms[platforms.length - 1].getPosition();
-
-        return platforms.concat(
-            [...Array(PLATFORMS_PER_SIDE - 1).keys()]
-            .map(idx => makePlatform(lastPos.x, lastPos.y + (platformSize + V_PLATFORM_DIST) * (idx + 1))));
-    },
-
-    initBotRightPlatforms: function(screenSize, platformSize, makePlatform) {
-        const minX = platformSize * (PLATFORMS_PER_SIDE + 1) + H_PLATFORM_DIST * PLATFORMS_PER_SIDE;
-        const minY = screenSize.height / 2 - platformSize * PLATFORMS_PER_SIDE;
-
-        const platforms = 
-            [makePlatform(minX, minY)]
-            .concat([...Array(PLATFORMS_PER_SIDE).keys()]
-                    .map(idx => 
-                        makePlatform(
-                            minX + platformSize + H_PLATFORM_DIST, 
-                            minY + (platformSize + V_PLATFORM_DIST) * idx)
-                        ));
-
-        const lastPos = platforms[platforms.length - 1].getPosition();
-
-        return platforms.concat(
-            [...Array(PLATFORMS_PER_SIDE - 1).keys()]
-            .map(idx => makePlatform(lastPos.x + (platformSize + H_PLATFORM_DIST) * (idx + 1), lastPos.y)));
+            .map(idx => {
+                const pt = getShortSidePlatformPos(lastPos, idx);
+                return makePlatform(pt.x, pt.y);
+            }));
     },
 
     initAllHomes: function() {
@@ -172,7 +151,7 @@ const PlaygroundLayer = cc.Layer.extend({
         const margin = 16;
         const nShortPlatforms = 3;
 
-        const makeHome = (x, y) => this.drawSprite(res.Home_png, { x: x, y: y, width: width, height: height });
+        const makeHome = (x, y) => drawSprite(res.Home_png, { x: x, y: y, width: width, height: height });
 
         const homes =
             [
@@ -194,27 +173,48 @@ const PlaygroundLayer = cc.Layer.extend({
             ];
 
         return homes;
-    },
-
-    drawSprite: function(sprite, rect, color='#ffffff') {
-        var sprite = new cc.Sprite(sprite);
-        sprite.attr({
-            x: rect.x,
-            y: rect.y,
-            width: rect.width,
-            height: rect.height,
-            color: cc.color(color),
-        });
-        sprite.getTexture().setAliasTexParameters();
-        return sprite;
     }
 });
+
+const Horse = cc.Node.extend({
+    sprite: null,
+
+    ctor: function() {
+        this._super();
+
+        this.setScale(BASE_SCALE, BASE_SCALE);
+
+        this.sprite = new cc.Sprite(res.Horse_0_png);
+        this.sprite.attr({
+            x: 64,
+            y: 64,
+            color: cc.color('#ecfa4e'),
+        });
+        
+        this.sprite.getTexture().setAliasTexParameters();
+        this.addChild(this.sprite, 5);
+    }
+});
+
+function drawSprite(sprite, rect, color='#ffffff') {
+    var sprite = new cc.Sprite(sprite);
+    sprite.attr({
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+        color: cc.color(color),
+    });
+    sprite.getTexture().setAliasTexParameters();
+    return sprite;
+}
 
 var HelloWorldScene = cc.Scene.extend({
     onEnter:function () {
         this._super();
         var playgroundLayer = new PlaygroundLayer();
         this.addChild(playgroundLayer);
+        this.addChild(new Horse());
     }
 });
 

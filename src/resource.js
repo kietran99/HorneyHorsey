@@ -27,6 +27,7 @@ const RES_ROOT = "res/"
 var res = {
     Platform_png : RES_ROOT + "Platform.png",
     Home_png : RES_ROOT + "Home.png",
+    Horse_0_png: RES_ROOT + "Horse_0.png"
 };
 
 var g_resources = [];
