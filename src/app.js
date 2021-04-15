@@ -21,35 +21,16 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  ****************************************************************************/
-const Horse = cc.Node.extend({
-    PLATFORMS_PER_SIDE: 6,
-    H_PLATFORM_DIST: 16,
-    V_PLATFORM_DIST: 0,
-
-    sprite: null,
-
-    ctor: function() {
-        this._super();
-
-        const screenSize = cc.winSize;
-        const platformSize = 48;
-        const width = (platformSize + this.H_PLATFORM_DIST) * (this.PLATFORMS_PER_SIDE - 1);
-        const height = platformSize * (this.PLATFORMS_PER_SIDE - 1) - 16;
-
-        this.sprite = drawScaleSprite(res.Horse_0_png, { x: width / 2 + 8 * BASE_SCALE, y: height / 2 + 14 * BASE_SCALE, scale: BASE_SCALE }, '#ecfa4e');
-        // this.sprite = drawScaleSprite(
-        //     res.Horse_0_png, 
-        //     { x: platformSize + 16 * BASE_SCALE, y: screenSize.height / 2 + (7 + 3) * BASE_SCALE, scale: BASE_SCALE }, 
-        //     '#ecfa4e'); // Place horse on single yellow platform
-        this.addChild(this.sprite, 5);
-    }
-});
-
 var HelloWorldScene = cc.Scene.extend({
     onEnter:function () {
         this._super();
-        this.addChild(new PlaygroundLayer());
-        this.addChild(new Horse());
+
+        const playground = new Playground();
+        const playersColor = ['#ecfa4e', '#4efafa', '#46fc7b', '#fa7a45'];
+        const players = playersColor.map((color, idx) => new Player(playground.homePosition(idx), color));
+
+        this.addChild(playground);
+        players.forEach(player => this.addChild(player));      
     }
 });
 

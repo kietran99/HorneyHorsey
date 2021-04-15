@@ -1,17 +1,22 @@
-const PlaygroundLayer = cc.Layer.extend({
+const Playground = cc.Layer.extend({
 	PLATFORMS_PER_SIDE: 6,
 	H_PLATFORM_DIST: 16,
 	V_PLATFORM_DIST: 0,
+    BOT_LEFT_COLOR: '#d9e027',
+    TOP_LEFT_COLOR: '#2291e0',
+    TOP_RIGHT_COLOR: '#e05222',
+    BOT_RIGHT_COLOR: '#22e062',
 
     homes: [],
+
     platforms: [],
 
-    ctor:function () {
+    ctor: function () {
         this._super();
 
         var size = cc.winSize;
 
-        const platformSize = 48;
+        const platformSize = 48; // WARNING: RETARDEDLY HARD CODED
         const xOffset = size.width / 2 - platformSize * (this.PLATFORMS_PER_SIDE + 1) - this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE;
         
         this.platforms = this.initAllPlatforms(size, platformSize);
@@ -40,7 +45,7 @@ const PlaygroundLayer = cc.Layer.extend({
             
             (lastPos, idx) => cc.p(lastPos.x, lastPos.y - (platformSize + this.V_PLATFORM_DIST) * (idx + 1)),
 
-            makePlatform('#d9e027'));
+            makePlatform(this.BOT_LEFT_COLOR));
         
         const tlMaxY = screenSize.height / 2 + platformSize * (this.PLATFORMS_PER_SIDE) + this.V_PLATFORM_DIST * this.PLATFORMS_PER_SIDE;
         const topLeft = this.initPlatformQuadrant(
@@ -52,7 +57,7 @@ const PlaygroundLayer = cc.Layer.extend({
 
             (lastPos, idx) => cc.p(lastPos.x - (platformSize + this.H_PLATFORM_DIST) * (idx + 1), lastPos.y),
 
-            makePlatform('#2291e0'));
+            makePlatform(this.TOP_LEFT_COLOR));
 
         const trMaxX = platformSize * (2 * this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * (2 * this.PLATFORMS_PER_SIDE);
         const topRight = this.initPlatformQuadrant(
@@ -64,7 +69,7 @@ const PlaygroundLayer = cc.Layer.extend({
 
             (lastPos, idx) => cc.p(lastPos.x, lastPos.y + (platformSize + this.V_PLATFORM_DIST) * (idx + 1)),
 
-            makePlatform('#e05222'));
+            makePlatform(this.TOP_RIGHT_COLOR));
 
         const brMinX = platformSize * (this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE;
         const brMinY = screenSize.height / 2 - platformSize * this.PLATFORMS_PER_SIDE;
@@ -77,7 +82,7 @@ const PlaygroundLayer = cc.Layer.extend({
 
             (lastPos, idx) => cc.p(lastPos.x + (platformSize + this.H_PLATFORM_DIST) * (idx + 1), lastPos.y),
 
-            makePlatform('#22e062'));
+            makePlatform(this.BOT_RIGHT_COLOR));
 
         const allPlatforms = botLeft.concat(topLeft).concat(topRight).concat(botRight);
         return allPlatforms;
@@ -138,5 +143,7 @@ const PlaygroundLayer = cc.Layer.extend({
             ];
 
         return homes;
-    }
+    },
+
+    homePosition: function(idx) { return this.homes[idx].getPosition(); }
 });

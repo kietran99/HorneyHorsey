@@ -1,4 +1,6 @@
-const BASE_SCALE = 3;
+const SpriteConfig = {
+    BASE_SCALE: 3
+};
 
 function drawSprite(sprite, rect, color='#ffffff') {
     var sprite = new cc.Sprite(sprite);
