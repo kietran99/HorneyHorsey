@@ -26,11 +26,13 @@ var HelloWorldScene = cc.Scene.extend({
         this._super();
 
         const playground = new Playground();
+        
         const playersColor = ['#ecfa4e', '#4efafa', '#46fc7b', '#fa7a45'];
         const players = playersColor.map((color, idx) => new Player(playground.homePosition(idx), color));
 
         this.addChild(playground);
-        players.forEach(player => this.addChild(player));      
+        players.forEach(player => this.addChild(player));
+        this.addChild(new UICanvas());  
     }
 });
 

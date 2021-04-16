@@ -2,7 +2,7 @@
     "project_type": "javascript",
 
     "debugMode" : 1,
-    "showFPS" : true,
+    "showFPS" : false,
     "frameRate" : 60,
     "noCache" : false,
     "id" : "gameCanvas",
@@ -16,6 +16,7 @@
         "src/sprite-utils.js",
         "src/playground.js",
         "src/player.js",
+        "src/UI.js",
         "src/app.js"
     ]
 }

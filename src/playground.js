@@ -7,28 +7,42 @@ const Playground = cc.Layer.extend({
     TOP_RIGHT_COLOR: '#e05222',
     BOT_RIGHT_COLOR: '#22e062',
 
-    homes: [],
+    maxX: null,
+    maxY: null,
+    minX: null,
+    minY: null,
 
+    homes: [],
     platforms: [],
+    goalLines: [],
 
     ctor: function () {
         this._super();
 
-        var size = cc.winSize;
-
+        const size = cc.winSize;
         const platformSize = 48; // WARNING: RETARDEDLY HARD CODED
-        const xOffset = size.width / 2 - platformSize * (this.PLATFORMS_PER_SIDE + 1) - this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE;
-        
+        // const xOffset = size.width / 2 - platformSize * (this.PLATFORMS_PER_SIDE + 1) - this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE;
+        const xOffset = 0;
+
         this.platforms = this.initAllPlatforms(size, platformSize);
         this.platforms.forEach(platform => platform.setPositionX(platform.getPositionX() + xOffset));
         this.platforms.forEach(platform => this.addChild(platform, 0));
 
-        this.homes = this.initAllHomes(this.platforms[0].width);
+        this.homes = this.initHomes(this.platforms[0].width);
         this.homes.forEach(home => home.setPositionX(home.getPositionX() + xOffset));
         this.homes.forEach(home => this.addChild(home, 0));
 
+        const goalLineColors = ['#afaf04', '#056bc2', '#c53008', '#00b945'];
+        this.goalLines = this.initAllGoalLines(goalLineColors);
+        this.goalLines.forEach(goalLine => this.offset(goalLine, xOffset));
+        this.goalLines.forEach(goalLine => this.addChildNodes(goalLine));
+
         return true;
     },
+
+    offset: function(nodes, xOffset) { nodes.forEach(node => node.setPositionX(node.getPositionX() + xOffset)); },
+
+    addChildNodes: function(nodes) { nodes.forEach(node => this.addChild(node, 0)); },
 
     initAllPlatforms: function(screenSize, platformSize) {
         const makePlatform = color => (x, y) => drawSprite(
@@ -36,8 +50,13 @@ const Playground = cc.Layer.extend({
             { x: x, y: y, width: platformSize, height: platformSize }, 
             color);
 
+        this.maxX = platformSize * (2 * this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * (2 * this.PLATFORMS_PER_SIDE);
+        this.maxY = screenSize.height / 2 + platformSize * (this.PLATFORMS_PER_SIDE) + this.V_PLATFORM_DIST * this.PLATFORMS_PER_SIDE;
+        this.minX = platformSize;
+        this.minY = screenSize.height / 2 - platformSize * this.PLATFORMS_PER_SIDE;
+
         const botLeft = this.initPlatformQuadrant(
-            cc.p(platformSize, screenSize.height / 2),
+            cc.p(this.minX, screenSize.height / 2),
             
             idx => cc.p(
                 platformSize * (idx + 1) + this.H_PLATFORM_DIST * idx, 
@@ -47,24 +66,22 @@ const Playground = cc.Layer.extend({
 
             makePlatform(this.BOT_LEFT_COLOR));
         
-        const tlMaxY = screenSize.height / 2 + platformSize * (this.PLATFORMS_PER_SIDE) + this.V_PLATFORM_DIST * this.PLATFORMS_PER_SIDE;
         const topLeft = this.initPlatformQuadrant(
-            cc.p(platformSize * (this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE, tlMaxY),
+            cc.p(platformSize * (this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE, this.maxY),
 
             idx => cc.p(
                 platformSize * (this.PLATFORMS_PER_SIDE) + this.H_PLATFORM_DIST * (this.PLATFORMS_PER_SIDE - 1), 
-                tlMaxY - (platformSize + this.V_PLATFORM_DIST) * idx),
+                this.maxY - (platformSize + this.V_PLATFORM_DIST) * idx),
 
             (lastPos, idx) => cc.p(lastPos.x - (platformSize + this.H_PLATFORM_DIST) * (idx + 1), lastPos.y),
 
             makePlatform(this.TOP_LEFT_COLOR));
 
-        const trMaxX = platformSize * (2 * this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * (2 * this.PLATFORMS_PER_SIDE);
         const topRight = this.initPlatformQuadrant(
-            cc.p(trMaxX, screenSize.height / 2),
+            cc.p(this.maxX, screenSize.height / 2),
 
             idx => cc.p(
-                trMaxX - (platformSize + this.H_PLATFORM_DIST) * idx, 
+                this.maxX - (platformSize + this.H_PLATFORM_DIST) * idx, 
                 screenSize.height / 2 + platformSize + this.V_PLATFORM_DIST),
 
             (lastPos, idx) => cc.p(lastPos.x, lastPos.y + (platformSize + this.V_PLATFORM_DIST) * (idx + 1)),
@@ -72,13 +89,12 @@ const Playground = cc.Layer.extend({
             makePlatform(this.TOP_RIGHT_COLOR));
 
         const brMinX = platformSize * (this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE;
-        const brMinY = screenSize.height / 2 - platformSize * this.PLATFORMS_PER_SIDE;
         const botRight = this.initPlatformQuadrant(
-            cc.p(brMinX, brMinY),
+            cc.p(brMinX, this.minY),
 
             idx => cc.p(
                 brMinX + platformSize + this.H_PLATFORM_DIST, 
-                brMinY + (platformSize + this.V_PLATFORM_DIST) * idx),
+                this.minY + (platformSize + this.V_PLATFORM_DIST) * idx),
 
             (lastPos, idx) => cc.p(lastPos.x + (platformSize + this.H_PLATFORM_DIST) * (idx + 1), lastPos.y),
 
@@ -88,11 +104,10 @@ const Playground = cc.Layer.extend({
         return allPlatforms;
     },
 
-
     /*
-    getLongSidePlatformPos: (idx) => cc.Point
-    getShortSidePlatformPos: (lastPos, idx) => cc.Point
-    makePlatform: (x, y) => cc.Sprite
+        getLongSidePlatformPos: (idx) => cc.Point
+        getShortSidePlatformPos: (lastPos, idx) => cc.Point
+        makePlatform: (x, y) => cc.Sprite
     */
 
     initPlatformQuadrant: function(singlePlatformPos, getLongSidePlatformsPos, getShortSidePlatformPos, makePlatform) {
@@ -115,7 +130,7 @@ const Playground = cc.Layer.extend({
             }));
     },
 
-    initAllHomes: function(platformSize) {
+    initHomes: function(platformSize) {
         const width = (platformSize + this.H_PLATFORM_DIST) * (this.PLATFORMS_PER_SIDE - 1);
         const height = platformSize * (this.PLATFORMS_PER_SIDE - 1) - 16;
         const margin = 16;
@@ -145,5 +160,59 @@ const Playground = cc.Layer.extend({
         return homes;
     },
 
-    homePosition: function(idx) { return this.homes[idx].getPosition(); }
+    homePosition: function(idx) { return this.homes[idx].getPosition(); },
+
+    initAllGoalLines: function(colors) {
+        const distFromMinMaxX = this.H_PLATFORM_DIST;
+        const leftLine = this.initGoalLine(idx => 
+            cc.p(this.minX + distFromMinMaxX + (48 + 2) * (idx + 1), cc.winSize.height / 2), colors[0]);
+
+        const distFromMaxY = 2;
+        const topLine = this.initGoalLine(idx => 
+            cc.p(
+                48 * (this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE, 
+                this.maxY - distFromMaxY - this.V_PLATFORM_DIST - (48 - 8) * (idx + 1)), 
+            colors[1]);
+
+        const rightLine = this.initGoalLine(idx => 
+            cc.p(this.maxX - distFromMinMaxX - (48 + 2) * (idx + 1), cc.winSize.height / 2), colors[2]);
+
+        const distFromMinY = 48;
+        const botLine = this.initGoalLine(idx => 
+            cc.p(
+                48 * (this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE, 
+                this.minY + distFromMinY + this.V_PLATFORM_DIST + (48 - 8) * (6 - (idx + 1))), 
+            colors[3], true);
+
+        return [leftLine, topLine, rightLine, botLine];
+    },
+
+    /*
+        getPlatPosFn: (idx) => cc.Point
+    */
+
+    initGoalLine: function(getPlatPosFn, color, reverse=false) {
+        return [...Array(this.PLATFORMS_PER_SIDE).keys()]
+            .map(idx => new GoalPlatform(reverse ? this.PLATFORMS_PER_SIDE - idx : idx + 1, getPlatPosFn(idx), color));
+    }
+});
+
+const GoalPlatform = cc.Node.extend({
+    platform: null,
+    top: null,
+    digit: null,
+
+    ctor: function(digit, pos, color) {
+        this._super();
+
+        this.platform = drawScaleSprite(res.Goal_png, { x: pos.x, y: pos.y, scale: SpriteConfig.BASE_SCALE }, color);
+        this.top = drawScaleSprite(res.Goal_Top_png, { x: pos.x, y: pos.y, scale: SpriteConfig.BASE_SCALE });
+        this.digit = drawScaleSprite(res.digit_png(digit), { x: pos.x, y: pos.y, scale: SpriteConfig.BASE_SCALE }, color);
+
+        this.addChild(this.platform, 0);
+        this.addChild(this.top, 0);
+        this.addChild(this.digit, 1);
+
+        return true;
+    }
 });

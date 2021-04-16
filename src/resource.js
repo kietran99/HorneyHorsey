@@ -22,12 +22,27 @@
  THE SOFTWARE.
  ****************************************************************************/
 
-const RES_ROOT = "res/"
+const RES_ROOT = "res/";
 
 var res = {
+    PixelFont_ttf: RES_ROOT + "VCR_OSD_MONO_1.001.ttf",
+
     Platform_png : RES_ROOT + "Platform.png",
     Home_png : RES_ROOT + "Home.png",
-    Horse_0_png: RES_ROOT + "Horse_0.png"
+    Horse_0_png: RES_ROOT + "Horse_0.png",
+    Goal_png: RES_ROOT + "Goal.png",
+    Goal_Top_png: RES_ROOT + "Goal_Top.png",
+    Num_pngs: [
+    	RES_ROOT + "Num_1.png",
+    	RES_ROOT + "Num_2.png",
+    	RES_ROOT + "Num_3.png",
+    	RES_ROOT + "Num_4.png",
+    	RES_ROOT + "Num_5.png",
+    	RES_ROOT + "Num_6.png"
+    ],
+    digit_png: function(digit) {
+    	return (digit > 0 && digit < 7) ? this.Num_pngs[digit - 1] : this.Num_pngs[0];
+    }
 };
 
 var g_resources = [];
