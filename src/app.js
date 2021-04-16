@@ -32,7 +32,7 @@ var HelloWorldScene = cc.Scene.extend({
 
         this.addChild(playground);
         players.forEach(player => this.addChild(player));
-        this.addChild(new UICanvas());  
+        this.addChild(new UICanvas()); 
     }
 });
 
