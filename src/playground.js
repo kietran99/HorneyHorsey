@@ -12,24 +12,37 @@ const Playground = cc.Layer.extend({
     minX: null,
     minY: null,
 
+    homeWidth: null,
+    homeHeight: null,
     homes: [],
+    homePositions: [],
+
+    platformSize: null,
     platforms: [],
+    platformPositions: [],
+
     goalLines: [],
+    goalLinesPlatPositions: [],
 
     ctor: function () {
         this._super();
 
         const size = cc.winSize;
         const platformSize = 48; // WARNING: RETARDEDLY HARD CODED
+        this.platformSize = platformSize;
         // const xOffset = size.width / 2 - platformSize * (this.PLATFORMS_PER_SIDE + 1) - this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE;
         const xOffset = 0;
 
         this.platforms = this.initAllPlatforms(size, platformSize);
         this.platforms.forEach(platform => platform.setPositionX(platform.getPositionX() + xOffset));
+        this.platformPositions = this.platforms.map(platform => platform.getPosition());
         this.platforms.forEach(platform => this.addChild(platform, 0));
 
         this.homes = this.initHomes(this.platforms[0].width);
         this.homes.forEach(home => home.setPositionX(home.getPositionX() + xOffset));
+        this.homeWidth = this.homes[0].width;
+        this.homeHeight = this.homes[0].height;
+        this.homePositions = this.homes.map(home => home.getPosition());
         this.homes.forEach(home => this.addChild(home, 0));
 
         const goalLineColors = ['#afaf04', '#056bc2', '#c53008', '#00b945'];
@@ -100,7 +113,7 @@ const Playground = cc.Layer.extend({
 
             makePlatform(this.BOT_RIGHT_COLOR));
 
-        const allPlatforms = botLeft.concat(topLeft).concat(topRight).concat(botRight);
+        const allPlatforms = botLeft.concat(botRight).concat(topRight).concat(topLeft);
         return allPlatforms;
     },
 
@@ -145,22 +158,24 @@ const Playground = cc.Layer.extend({
                     height / 2 + margin),                                                       // bottom left
 
                 makeHome(
-                    width / 2 + margin, 
-                    height / 2 + height + margin * 2 + (platformSize) * nShortPlatforms),    	// top left
-
-                makeHome(
                     width / 2 + margin + width + (platformSize + this.H_PLATFORM_DIST) * nShortPlatforms, 
                     height / 2 + 16),                                                           // bottom right
 
                 makeHome(
                     width / 2 + margin + width + (platformSize + this.H_PLATFORM_DIST) * nShortPlatforms, 
-                    height / 2 + height + margin * 2 + (platformSize) * nShortPlatforms)     	// top right
+                    height / 2 + height + margin * 2 + (platformSize) * nShortPlatforms),        // top right
+
+                makeHome(
+                    width / 2 + margin, 
+                    height / 2 + height + margin * 2 + (platformSize) * nShortPlatforms)    	// top left
             ];
 
         return homes;
     },
 
     homePosition: function(idx) { return this.homes[idx].getPosition(); },
+
+    actionHomeIdx: homeIdx => 100 * (homeIdx + 1),
 
     initAllGoalLines: function(colors) {
         const distFromMinMaxX = this.H_PLATFORM_DIST;

@@ -34,6 +34,7 @@ const UICanvas = cc.Node.extend({
 const Dice = cc.Node.extend({
 	diceSprite: null,
 	digitSprite: null,
+	res: null, // IDK why tf does roll() cannot ref res directly =.=
 
 	ctor: function(digitColor) {
 		this._super();
@@ -46,11 +47,18 @@ const Dice = cc.Node.extend({
 
 		this.diceSprite = drawScaleSprite(res.Dice_png, rect);
 
-		this.digitSprite = drawScaleSprite(res.diceDigit_png(2), rect, digitColor);
+		this.digitSprite = drawScaleSprite(res.diceDigit_png(1), rect, digitColor);
+		this.res = res;
 
 		this.addChild(this.diceSprite, 0);
 		this.addChild(this.digitSprite, 1);
 
 		return true;
+	},
+
+	roll: function() {
+		const res = Math.floor(Math.random() * 6) + 1;
+		this.digitSprite.setTexture(this.res.diceDigit_png(res));
+		return res;
 	}
 });

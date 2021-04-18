@@ -53,8 +53,12 @@ var res = {
     Dice_png: RES_ROOT + "Dice.png",
     
     DiceDigit_pngs: [
-        RES_ROOT + "Dice-1.png",
-        RES_ROOT + "Dice-2.png"
+        RES_ROOT + "Dice_1.png",
+        RES_ROOT + "Dice_2.png",
+        RES_ROOT + "Dice_3.png",
+        RES_ROOT + "Dice_4.png",
+        RES_ROOT + "Dice_5.png",
+        RES_ROOT + "Dice_6.png"
     ],
     
     diceDigit_png: function(digit) {

@@ -13,9 +13,14 @@
 
     "jsList" : [
         "src/resource.js",
+        "src/functor.js",
+        "src/utils.js",
+        "src/event-channel.js",
         "src/sprite-utils.js",
         "src/playground.js",
+        "src/control.js",
         "src/player.js",
+        "src/turn-manager.js",
         "src/UI.js",
         "src/app.js"
     ]

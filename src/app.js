@@ -21,18 +21,33 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  ****************************************************************************/
+eventChannel.addListener("Object Tap", idx => cc.log("Tapped Object Index: " + idx));
+
 var HelloWorldScene = cc.Scene.extend({
+    executor: null,
     onEnter:function () {
         this._super();
 
         const playground = new Playground();
         
-        const playersColor = ['#ecfa4e', '#4efafa', '#46fc7b', '#fa7a45'];
-        const players = playersColor.map((color, idx) => new Player(playground.homePosition(idx), color));
+        const playersColor = ['#ecfa4e', '#46fc7b', '#fa7a45', '#4efafa'];
+        const players = playersColor.map((color, idx) => 
+            new Player(
+                playground,
+                playground.actionHomeIdx(idx),
+                1 + 12 * idx,
+                12 * idx,
+                color));
+
+        const UI = new UICanvas();
+        const turnManager = new TurnManager(players.map(player => player.id), UI.dice);
 
         this.addChild(playground);
         players.forEach(player => this.addChild(player));
-        this.addChild(new UICanvas()); 
+        this.addChild(UI); 
+        this.addChild(new ControlLayer(playground, players[0]));
+        this.addChild(turnManager);
+        eventChannel.raise("Dice Roll", { playerId: 3, val: 1 });
     }
 });
 
