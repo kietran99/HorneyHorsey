@@ -1,23 +1,33 @@
-const PlaygroundState = (playground) => ({
-	N_PLATFORMS_PER_COLOR: 12,
+function PlaygroundState(playground) {
+	this.N_PLATFORMS_PER_COLOR = 12;
 
-	platformPositions: null,
+	this.platformsOccupationList = [...Array(playground.platformPositions.length).keys()].map(idx => false);
 
-	keyIndicesList: null,
+	this.getHomePos = (playerIdx) => { return playground.homePositions[playerIdx]; };
 
-	getHomePos: function(playerIdx) { return playground.homePositions[playerIdx]; },
+	this.getHomeIdx = (playerIdx) => { return playground.actionHomeIdx(playerIdx); };
 
-	getHomeIdx: function(playerIdx) { return playground.actionHomeIdx(playerIdx); },
+	this.getReleasePos = (playerIdx) => { return playground.platformPositions[this.getReleaseIdx(playerIdx)]; };
 
-	getReleasePos: function(playerIdx) { return playground.platformPositions[this.getReleaseIdx(playerIdx)]; },
+	this.getReleaseIdx = (playerIdx) => { return this.N_PLATFORMS_PER_COLOR * playerIdx + 1; };
 
-	getReleaseIdx: function(playerIdx) { return 1 + this.N_PLATFORMS_PER_COLOR * playerIdx; },
+	this.getPlatformPos = (platformIdx) => { return playground.platformPositions[platformIdx]; };
 
-	getPlatformPos: function(platformIdx) { return playground.platformPositions[platformIdx]; }
-});
+	this.requestReleaseIdx = (playerIdx) => {
+		const releaseIdx = this.getReleaseIdx(playerIdx);
+		return this.platformsOccupationList[releaseIdx] ? None() : Some(releaseIdx);
+	};
 
-function KeyIndices(homeIdx, releaseIdx, endIdx) {
-	this.homeIdx = homeIdx;
-	this.releaseIdx = releaseIdx;
-	this.endIdx = endIdx;
-}
+	this.onRelease = (playerIdx) => {
+		cc.log("Release: " + this.getReleaseIdx(playerIdx));
+		this.setPosIdx(this.getReleaseIdx(playerIdx), true); 
+	};
+
+	this.onMove = (curIdx, movedIdx) => {
+		cc.log("Move: CurIdx = " + curIdx + " MovedIdx = " + movedIdx);
+		this.setPosIdx(movedIdx, true);
+		this.setPosIdx(curIdx, false);
+	};
+
+	this.setPosIdx = (idx, shouldOccupy) => { this.platformsOccupationList[idx] = shouldOccupy; };
+};

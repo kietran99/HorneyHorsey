@@ -29,7 +29,7 @@ var HelloWorldScene = cc.Scene.extend({
         this._super();
 
         const playground = new Playground();
-        var playgroundState = PlaygroundState(playground);
+        var playgroundState = new PlaygroundState(playground);
         
         const playersColor = ['#f4ff75', '#65ff92', '#ff9a70', '#4efafa'];
         const players = playersColor.map((color, idx) => 

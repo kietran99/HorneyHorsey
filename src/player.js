@@ -49,7 +49,13 @@ const Player = cc.Node.extend({
 
         if (diceVal == 1 || diceVal == 6)
         {
-            actionDict[this.playgroundState.getHomeIdx(this.idx)] = () => this.release();
+            const maybeReleaseIdx = this.requestRelease();
+
+            maybeReleaseIdx
+                .match({
+                    Some: (releaseIdx) => actionDict[this.playgroundState.getHomeIdx(this.idx)] = () => this.release(),
+                    None: () => cc.log("Release Error: A horse is blocking the way")
+                });
         }
 
         if (this.activeHorses.length > 0)
@@ -64,12 +70,10 @@ const Player = cc.Node.extend({
 
         if (Object.keys(actionDict).length === 0)
         {
-            cc.log("Invalid Possible Moves");
             setTimeout(() => {
                 eventChannel.raise("Turn End", {});
                 return;
-            }, 2000);
-            
+            }, 2000);            
         }
 
         const executeIfIdxValid = idx => 
@@ -89,29 +93,28 @@ const Player = cc.Node.extend({
         eventChannel.addListener("Object Tap", executeIfIdxValid);
     },
 
-    release: function() {
+    requestRelease: function() {
         if (this.idleHorses.length === 0)
         {
             cc.log("Release Error: Home is empty");
-            return;
+            return None();
         }
-       
-        const newlyReleasedHorse = find(this.activeHorses, horse => horse.posIdx === this.releasePosIdx);
-        newlyReleasedHorse
-            .match({
-                Some: (horse) => cc.log("Release Error: A horse is blocking the way"),
-                None: () => {
-                    const horse = new ActiveHorse(
+
+        return this.playgroundState.requestReleaseIdx(this.idx);
+    },
+
+    release: function() {
+        const horse = new ActiveHorse(
                         this.idleHorses.shift(), 
                         this.playgroundState.getReleasePos(this.idx),
                         this.releasePosIdx);
 
-                    this.activeHorses.push(horse);
-                }
-            });    
+        this.activeHorses.push(horse);
+        this.playgroundState.onRelease(this.idx);
     },
 
     move: function(horse, steps) {
+        this.playgroundState.onMove(horse.posIdx, this.movedIdx(horse.posIdx, steps));
         horse.move(this.playgroundState.getPlatformPos(this.movedIdx(horse.posIdx, steps)), steps);
     },
 
