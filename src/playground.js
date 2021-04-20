@@ -2,10 +2,6 @@ const Playground = cc.Layer.extend({
 	PLATFORMS_PER_SIDE: 6,
 	H_PLATFORM_DIST: 16,
 	V_PLATFORM_DIST: 0,
-    BOT_LEFT_COLOR: '#d9e027',
-    TOP_LEFT_COLOR: '#2291e0',
-    TOP_RIGHT_COLOR: '#e05222',
-    BOT_RIGHT_COLOR: '#22e062',
 
     maxX: null,
     maxY: null,
@@ -17,6 +13,7 @@ const Playground = cc.Layer.extend({
     homes: [],
     homePositions: [],
 
+    platformColors: ['#d9e027', '#2291e0', '#e05222', '#22e062'],
     platformSize: null,
     platforms: [],
     platformPositions: [],
@@ -77,7 +74,7 @@ const Playground = cc.Layer.extend({
             
             (lastPos, idx) => cc.p(lastPos.x, lastPos.y - (platformSize + this.V_PLATFORM_DIST) * (idx + 1)),
 
-            makePlatform(this.BOT_LEFT_COLOR));
+            makePlatform(this.platformColors[0]));
         
         const topLeft = this.initPlatformQuadrant(
             cc.p(platformSize * (this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE, this.maxY),
@@ -88,7 +85,7 @@ const Playground = cc.Layer.extend({
 
             (lastPos, idx) => cc.p(lastPos.x - (platformSize + this.H_PLATFORM_DIST) * (idx + 1), lastPos.y),
 
-            makePlatform(this.TOP_LEFT_COLOR));
+            makePlatform(this.platformColors[1]));
 
         const topRight = this.initPlatformQuadrant(
             cc.p(this.maxX, screenSize.height / 2),
@@ -99,7 +96,7 @@ const Playground = cc.Layer.extend({
 
             (lastPos, idx) => cc.p(lastPos.x, lastPos.y + (platformSize + this.V_PLATFORM_DIST) * (idx + 1)),
 
-            makePlatform(this.TOP_RIGHT_COLOR));
+            makePlatform(this.platformColors[2]));
 
         const brMinX = platformSize * (this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE;
         const botRight = this.initPlatformQuadrant(
@@ -111,7 +108,7 @@ const Playground = cc.Layer.extend({
 
             (lastPos, idx) => cc.p(lastPos.x + (platformSize + this.H_PLATFORM_DIST) * (idx + 1), lastPos.y),
 
-            makePlatform(this.BOT_RIGHT_COLOR));
+            makePlatform(this.platformColors[3]));
 
         const allPlatforms = botLeft.concat(botRight).concat(topRight).concat(topLeft);
         return allPlatforms;

@@ -66,6 +66,7 @@ const Player = cc.Node.extend({
 
         if (Object.keys(actionDict).length === 0)
         {
+            cc.log("Invalid Possible Moves");
             eventChannel.raise("Turn End", {});
             return;
         }
