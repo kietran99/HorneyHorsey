@@ -3,9 +3,10 @@ const TurnManager = cc.Node.extend({
 	turnIndicator: 0,
 	ui:null,
 	turnNum:0,
-	ctor: function(playerIds, ui) {
+
+	ctor: function(playerIndices, ui) {
 		this._super();
-		this.playerList = playerIds;
+		this.playerList = playerIndices;
 		// cc.log(this.playerList);
 		this.turnIndicator = 0;
 		this.ui = ui;
@@ -13,7 +14,7 @@ const TurnManager = cc.Node.extend({
 		diceRoll = this.ui.dice.roll();
 		
 		/*
-		Dice Roll event data: playerId: which player turn where 0 <= playerId <= 3, val: dice value
+		Dice Roll event data: playerIdx: which player turn where 0 <= playerIdx <= 3, val: dice value
 		*/
 		// if (diceRoll ==1 || diceRoll == 6)
 		// {
@@ -34,27 +35,31 @@ const TurnManager = cc.Node.extend({
 
 		return true;
 	},
+
 	nextTurn: function()
 	{
-		this.turnIndicator += 1;
-		if (this.turnIndicator>= 4) {
+		this.turnIndicator++;
+		if (this.turnIndicator >= this.playerList.length) {
 			this.turnIndicator = 0;
 		}
 	},
+
 	turnEnd:function(){
-		this.turnNum +=1;
+		this.turnNum++;
 		this.nextTurn();
 		diceRoll = this.ui.dice.roll(this.turnIndicator);
-		eventChannel.raise("Dice Roll", { playerId: this.turnIndicator, val: diceRoll }); 
-		cc.log("it's player " + this.turnIndicator + " turn!");
+		eventChannel.raise("Dice Roll", { playerIdx: this.turnIndicator, val: diceRoll }); 
+		cc.log("It's player " + this.turnIndicator + " turn!");
+
 		if (diceRoll == 1 || diceRoll == 6)
 		{
 			this.turnIndicator -=1;
 			if(this.turnIndicator < 0){
 				this.turnIndicator = 3
 			}
-			cc.log("player " + this.turnIndicator + " get one more turn when dice rolls to "+ diceRoll+"!");
+			cc.log("Player " + this.turnIndicator + " get one more turn when dice rolls to " + diceRoll + "!");
 		}
+
 		this.ui.updateTurnText(this.turnNum);
 	}
 });

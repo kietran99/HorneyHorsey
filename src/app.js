@@ -29,25 +29,21 @@ var HelloWorldScene = cc.Scene.extend({
         this._super();
 
         const playground = new Playground();
+        var playgroundState = PlaygroundState(playground);
         
-        const playersColor = ['#ecfa4e', '#46fc7b', '#fa7a45', '#4efafa'];
+        const playersColor = ['#f4ff75', '#65ff92', '#ff9a70', '#4efafa'];
         const players = playersColor.map((color, idx) => 
-            new Player(
-                playground,
-                playground.actionHomeIdx(idx),
-                1 + 12 * idx,
-                12 * idx,
-                color));
+            new Player(playgroundState, /*12 * idx, */color));
 
         const UI = new UICanvas(playground.platformColors);
-        const turnManager = new TurnManager(players.map(player => player.id), UI);
+        const turnManager = new TurnManager(players.map(player => player.idx), UI);
 
         this.addChild(playground);
         players.forEach(player => this.addChild(player));
         this.addChild(UI); 
         this.addChild(new ControlLayer(playground, players[0]));
         this.addChild(turnManager);
-        eventChannel.raise("Dice Roll", { playerId: 0, val: UI.dice.roll(0) });
+        eventChannel.raise("Dice Roll", { playerIdx: 0, val: UI.dice.roll(0) });
     }
 });
 
