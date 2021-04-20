@@ -1,34 +1,60 @@
 const TurnManager = cc.Node.extend({
 	playerList: [],
 	turnIndicator: 0,
-	dice: null,
-	ctor: function(playerIds, dice) {
+	ui:null,
+	turnNum:0,
+	ctor: function(playerIds, ui) {
 		this._super();
 		this.playerList = playerIds;
-		this.turnIndicator = 0
-		this.dice = dice
-		diceRoll = this.dice.roll(0);
-		if (diceRoll ==1 || diceRoll == 6)
-		{
-			this.keepPlayerTurn();
-		}
+		// cc.log(this.playerList);
+		this.turnIndicator = 0;
+		this.ui = ui;
+		this.turnNum = 1;
+		diceRoll = this.ui.dice.roll();
 		
-		// Dice Roll event data: playerId: which player turn where 0 <= playerId <= 3, val: dice value
-		
-		eventChannel.addListener("Turn End", data => eventChannel.raise("Dice Roll", { playerId: this.turnIndicator, val: diceRoll }));
-		this.nextPlayerTurn();
+		/*
+		Dice Roll event data: playerId: which player turn where 0 <= playerId <= 3, val: dice value
+		*/
+		// if (diceRoll ==1 || diceRoll == 6)
+		// {
+		// 	this.keepPlayerTurn();
+		// }
+		// this.nextPlayerTurn();
+
+		// eventChannel.addListener()
+
+		eventChannel.addListener("Turn End", data => this.turnEnd());
+
+		// eventChannel.addListener("Turn End", data => {this.nextPlayerTurn});
+		// if (diceRoll ==1 || diceRoll == 6)
+		// {
+		// 	this.keepPlayerTurn();
+		// }
+		// this.nextPlayerTurn();
 
 		return true;
 	},
-
-	nextPlayerTurn: function(){
+	nextTurn: function()
+	{
 		this.turnIndicator += 1;
-		if (this.turnIndicator>= this.playerList.length) {
+		if (this.turnIndicator>= 4) {
 			this.turnIndicator = 0;
 		}
 	},
-
-	keepPlayerTurn: function(){
-		this.turnIndicator -= 1
+	turnEnd:function(){
+		this.turnNum +=1;
+		this.nextTurn();
+		diceRoll = this.ui.dice.roll(this.turnIndicator);
+		eventChannel.raise("Dice Roll", { playerId: this.turnIndicator, val: diceRoll }); 
+		cc.log("it's player " + this.turnIndicator + " turn!");
+		if (diceRoll == 1 || diceRoll == 6)
+		{
+			this.turnIndicator -=1;
+			if(this.turnIndicator < 0){
+				this.turnIndicator = 3
+			}
+			cc.log("player " + this.turnIndicator + " get one more turn when dice rolls to "+ diceRoll+"!");
+		}
+		this.ui.updateTurnText(this.turnNum);
 	}
 });

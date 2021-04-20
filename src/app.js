@@ -40,14 +40,14 @@ var HelloWorldScene = cc.Scene.extend({
                 color));
 
         const UI = new UICanvas(playground.platformColors);
-        const turnManager = new TurnManager(players.map(player => player.id), UI.dice);
+        const turnManager = new TurnManager(players.map(player => player.id), UI);
 
         this.addChild(playground);
         players.forEach(player => this.addChild(player));
         this.addChild(UI); 
         this.addChild(new ControlLayer(playground, players[0]));
         this.addChild(turnManager);
-        eventChannel.raise("Dice Roll", { playerId: 0, val: 1 });
+        eventChannel.raise("Dice Roll", { playerId: 0, val: UI.dice.roll(0) });
     }
 });
 

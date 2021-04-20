@@ -20,8 +20,8 @@
         "src/playground.js",
         "src/control.js",
         "src/player.js",
-        "src/turn-manager.js",
         "src/UI.js",
+        "src/turn-manager.js",
         "src/app.js"
     ]
 }
