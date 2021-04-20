@@ -24,26 +24,24 @@
 eventChannel.addListener("Object Tap", idx => cc.log("Tapped Object Index: " + idx));
 
 var HelloWorldScene = cc.Scene.extend({
-    executor: null,
     onEnter:function () {
         this._super();
 
         const playground = new Playground();
-        var playgroundState = new PlaygroundState(playground);
+        const playgroundState = new PlaygroundState(playground);
         
         const playersColor = ['#f4ff75', '#65ff92', '#ff9a70', '#4efafa'];
-        const players = playersColor.map((color, idx) => 
-            new Player(playgroundState, /*12 * idx, */color));
+        const players = playersColor.map((color, idx) => new Player(playgroundState, color));
 
         const UI = new UICanvas(playground.platformColors);
         const turnManager = new TurnManager(players.map(player => player.idx), UI);
 
         this.addChild(playground);
+        this.addChild(playgroundState);
         players.forEach(player => this.addChild(player));
         this.addChild(UI); 
         this.addChild(new ControlLayer(playground, players[0]));
         this.addChild(turnManager);
-        eventChannel.raise("Dice Roll", { playerIdx: 0, val: UI.dice.roll(0) });
     }
 });
 
