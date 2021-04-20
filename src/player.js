@@ -67,8 +67,11 @@ const Player = cc.Node.extend({
         if (Object.keys(actionDict).length === 0)
         {
             cc.log("Invalid Possible Moves");
-            eventChannel.raise("Turn End", {});
-            return;
+            setTimeout(()=>{
+                eventChannel.raise("Turn End", {});
+                return;
+            },2000);
+            
         }
 
         const executeIfIdxValid = idx => 
@@ -76,6 +79,7 @@ const Player = cc.Node.extend({
             if (!actionDict.hasOwnProperty(idx))
             {
                 cc.log("Invalid Position Index");
+                // setTimeout(()=>{return;},2000);
                 return;
             }
 
