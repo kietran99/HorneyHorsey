@@ -23,11 +23,15 @@ const UICanvas = cc.Node.extend({
 		});
 
 		this.addChild(this.nTurnsText, 0);
-
+		this.updateTurnText(2);
 		this.dice = new Dice('#d9e027');
 		this.addChild(this.dice, 0);
 
 		return true;
+	},
+
+	updateTurnText: function(turn) {
+		this.nTurnsText.setString((turn < 10 ? "0" : "") + turn);
 	}
 });
 

@@ -47,7 +47,7 @@ var HelloWorldScene = cc.Scene.extend({
         this.addChild(UI); 
         this.addChild(new ControlLayer(playground, players[0]));
         this.addChild(turnManager);
-        eventChannel.raise("Dice Roll", { playerId: 3, val: 1 });
+        eventChannel.raise("Dice Roll", { playerId: 0, val: 1 });
     }
 });
 
