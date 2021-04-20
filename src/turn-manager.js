@@ -1,21 +1,20 @@
 const TurnManager = cc.Node.extend({
 	playerList: [],
 	turnIndicator: 0,
-	dice:null,
+	dice: null,
 	ctor: function(playerIds, dice) {
 		this._super();
 		this.playerList = playerIds;
 		this.turnIndicator = 0
 		this.dice = dice
-		diceRoll = this.dice.roll();
+		diceRoll = this.dice.roll(0);
 		if (diceRoll ==1 || diceRoll == 6)
 		{
 			this.keepPlayerTurn();
 		}
-		/*
-		Dice Roll event data: playerId: which player turn where 0 <= playerId <= 3, val: dice value
-		*/
-
+		
+		// Dice Roll event data: playerId: which player turn where 0 <= playerId <= 3, val: dice value
+		
 		eventChannel.addListener("Turn End", data => eventChannel.raise("Dice Roll", { playerId: this.turnIndicator, val: diceRoll }));
 		this.nextPlayerTurn();
 

@@ -3,7 +3,7 @@ const UICanvas = cc.Node.extend({
 	nTurnsText: null,
 	dice: null,
 
-	ctor: function() {
+	ctor: function(diceColors) {
 		this._super();
 
 		this.turnLabel = new cc.LabelTTF("TURN");
@@ -23,8 +23,8 @@ const UICanvas = cc.Node.extend({
 		});
 
 		this.addChild(this.nTurnsText, 0);
-		this.updateTurnText(2);
-		this.dice = new Dice('#d9e027');
+		
+		this.dice = new Dice(diceColors);
 		this.addChild(this.dice, 0);
 
 		return true;
@@ -38,9 +38,10 @@ const UICanvas = cc.Node.extend({
 const Dice = cc.Node.extend({
 	diceSprite: null,
 	digitSprite: null,
+	colors: null,
 	res: null, // IDK why tf does roll() cannot ref res directly =.=
 
-	ctor: function(digitColor) {
+	ctor: function(colors) {
 		this._super();
 
 		const rect = {
@@ -49,9 +50,9 @@ const Dice = cc.Node.extend({
 				scale: SpriteConfig.BASE_SCALE
 			}
 
+		this.colors = colors;
 		this.diceSprite = drawScaleSprite(res.Dice_png, rect);
-
-		this.digitSprite = drawScaleSprite(res.diceDigit_png(1), rect, digitColor);
+		this.digitSprite = drawScaleSprite(res.diceDigit_png(1), rect, colors[0]);
 		this.res = res;
 
 		this.addChild(this.diceSprite, 0);
@@ -60,8 +61,10 @@ const Dice = cc.Node.extend({
 		return true;
 	},
 
-	roll: function() {
+	roll: function(colorIdx) {
+		cc.log("Roll Dice");
 		const res = Math.floor(Math.random() * 6) + 1;
+		this.digitSprite.color = cc.color(this.colors[colorIdx]);
 		this.digitSprite.setTexture(this.res.diceDigit_png(res));
 		return res;
 	}

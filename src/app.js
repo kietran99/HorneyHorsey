@@ -39,7 +39,7 @@ var HelloWorldScene = cc.Scene.extend({
                 12 * idx,
                 color));
 
-        const UI = new UICanvas();
+        const UI = new UICanvas(playground.platformColors);
         const turnManager = new TurnManager(players.map(player => player.id), UI.dice);
 
         this.addChild(playground);

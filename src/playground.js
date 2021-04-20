@@ -13,7 +13,7 @@ const Playground = cc.Layer.extend({
     homes: [],
     homePositions: [],
 
-    platformColors: ['#d9e027', '#2291e0', '#e05222', '#22e062'],
+    platformColors: ['#d9e027', '#22e062', '#e05222', '#2291e0'],
     platformSize: null,
     platforms: [],
     platformPositions: [],
@@ -85,7 +85,7 @@ const Playground = cc.Layer.extend({
 
             (lastPos, idx) => cc.p(lastPos.x - (platformSize + this.H_PLATFORM_DIST) * (idx + 1), lastPos.y),
 
-            makePlatform(this.platformColors[1]));
+            makePlatform(this.platformColors[3]));
 
         const topRight = this.initPlatformQuadrant(
             cc.p(this.maxX, screenSize.height / 2),
@@ -108,7 +108,7 @@ const Playground = cc.Layer.extend({
 
             (lastPos, idx) => cc.p(lastPos.x + (platformSize + this.H_PLATFORM_DIST) * (idx + 1), lastPos.y),
 
-            makePlatform(this.platformColors[3]));
+            makePlatform(this.platformColors[1]));
 
         const allPlatforms = botLeft.concat(botRight).concat(topRight).concat(topLeft);
         return allPlatforms;
