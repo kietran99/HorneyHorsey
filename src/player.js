@@ -7,9 +7,10 @@ const Player = cc.Node.extend({
 
     playground: null,
 
-    startHomePos: [],
     idleHorses: [],
     activeHorses: [],
+
+    startHomePos: [],
     releasePos: null,
     releasePosIdx: null,
     endPosIdx: null,
@@ -56,8 +57,7 @@ const Player = cc.Node.extend({
         if (this.activeHorses.length > 0)
         {
             const movableHorses = this.activeHorses.filter(horse => horse.moveDist + diceVal <= 47); 
-            movableHorses.forEach(horse => 
-                actionDict[this.realIdx(horse.posIdx, diceVal)] = () => this.move(horse, diceVal));
+            movableHorses.forEach(horse => actionDict[this.realIdx(horse.posIdx, diceVal)] = () => this.move(horse, diceVal));
         }
 
         // TODO Goal actionDict

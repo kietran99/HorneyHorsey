@@ -19,7 +19,7 @@ const Playground = cc.Layer.extend({
     platformPositions: [],
 
     goalLines: [],
-    goalLinesPlatPositions: [],
+    goalLinesPfPosition: [],
 
     ctor: function () {
         this._super();
@@ -45,6 +45,7 @@ const Playground = cc.Layer.extend({
         const goalLineColors = ['#afaf04', '#056bc2', '#c53008', '#00b945'];
         this.goalLines = this.initAllGoalLines(goalLineColors);
         this.goalLines.forEach(goalLine => this.offset(goalLine, xOffset));
+        this.goalLinesPfPosition = this.goalLines.map(goalLine => goalLine.map(platform => platform.getPosition()));
         this.goalLines.forEach(goalLine => this.addChildNodes(goalLine));
 
         return true;
