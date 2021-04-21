@@ -45,7 +45,8 @@ const Playground = cc.Layer.extend({
         const goalLineColors = ['#afaf04', '#056bc2', '#c53008', '#00b945'];
         this.goalLines = this.initAllGoalLines(goalLineColors);
         this.goalLines.forEach(goalLine => this.offset(goalLine, xOffset));
-        this.goalLinesPfPosition = this.goalLines.map(goalLine => goalLine.map(platform => platform.getPosition()));
+        this.goalLinesPfPosition = this.goalLines.map(goalLine => goalLine.map(platform => platform.platform.getPosition()));
+        // this.goalLinesPfPosition[0].forEach(pfPos => cc.log("(" + pfPos.x + ", " + pfPos.y + ")"));
         this.goalLines.forEach(goalLine => this.addChildNodes(goalLine));
 
         return true;
@@ -196,8 +197,9 @@ const Playground = cc.Layer.extend({
                 48 * (this.PLATFORMS_PER_SIDE + 1) + this.H_PLATFORM_DIST * this.PLATFORMS_PER_SIDE, 
                 this.minY + distFromMinY + this.V_PLATFORM_DIST + (48 - 8) * (6 - (idx + 1))), 
             colors[3], true);
+        botLine.reverse();
 
-        return [leftLine, topLine, rightLine, botLine];
+        return [leftLine, botLine, rightLine, topLine];
     },
 
     /*
@@ -207,7 +209,9 @@ const Playground = cc.Layer.extend({
     initGoalLine: function(getPlatPosFn, color, reverse=false) {
         return [...Array(this.PLATFORMS_PER_SIDE).keys()]
             .map(idx => new GoalPlatform(reverse ? this.PLATFORMS_PER_SIDE - idx : idx + 1, getPlatPosFn(idx), color));
-    }
+    },
+
+    getGoalPfIdx: (playerIdx, platformIdx) => 1000 * (playerIdx + 1) + platformIdx
 });
 
 const GoalPlatform = cc.Node.extend({

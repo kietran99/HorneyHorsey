@@ -41,7 +41,33 @@ const ControlLayer = cc.Layer.extend({
                                 .match({
                                     Some: pfIdx => eventChannel.raise("Object Tap", pfIdx),
                                     None: () => {
-                                        cc.log("No object tapped");
+                                        let foundTappedObj = false;
+
+                                        for (i = 0; i < 4; i++)
+                                        {
+                                            const maybeGoalPfIdx = this.findIdx(
+                                                this.playground.goalLinesPfPosition[i], 
+                                                checkPlatformTap);
+
+                                            maybeGoalPfIdx
+                                            .match({
+                                                Some: goalPfIdx => {
+                                                    eventChannel.raise(
+                                                    "Object Tap", 
+                                                    this.playground.getGoalPfIdx(i, goalPfIdx));
+
+                                                    foundTappedObj = true;
+                                                },
+                                                None: () => foundTappedObj = false
+                                            });
+
+                                            if (foundTappedObj)
+                                            {
+                                                break;
+                                            }
+                                        }  
+
+                                        if (!foundTappedObj) cc.log("No Object was tapped");                                               
                                     }
                                 });
                         }

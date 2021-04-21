@@ -2,6 +2,7 @@ var nextPlayerIdx = 0;
 
 const Player = cc.Node.extend({
     N_HORSES: 4,
+    N_GOAL_PLATFORMS: 6,
 
     idx: null,
 
@@ -12,6 +13,10 @@ const Player = cc.Node.extend({
 
     startHomePos: [],
     emptyHomePos: null,
+
+    endPosHorse: null,
+    goalLine: null,
+    goalMovable: null,
 
     ctor: function(playgroundState, horseColor) {
         this._super();
@@ -34,8 +39,11 @@ const Player = cc.Node.extend({
 
         this.idleHorses = [...Array(this.N_HORSES).keys()].map(idx => new Horse(this.startHomePos[idx], horseColor));
         this.idleHorses.forEach(horse => this.addChild(horse, 0));
-
         this.activeHorses = [];
+
+        this.endPosHorse = null;
+        this.goalLine = [...Array(this.N_GOAL_PLATFORMS).keys()].map(idx => null);
+        this.goalMovable = false;
 
         eventChannel.addListener("Dice Roll", 
             diceData => (diceData.playerIdx === this.idx) && this.listenToTouchEvent(diceData.val));
@@ -68,7 +76,11 @@ const Player = cc.Node.extend({
                         actionDict[movedIdx] = () => this.move(data.horse, movedIdx, diceVal))));
         }
 
-        // TODO Goal actionDict
+        this.requestEndToGoalMove(diceVal - 1).map(goalPfIdx => 
+            actionDict[goalPfIdx] = () => this.endToGoalMove(diceVal - 1));
+
+        this.requestGoalMove(diceVal).map(idxData =>
+            actionDict[idxData.toIdx] = () => this.goalLineMove(idxData.fromIdx, diceVal - 1));
 
         if (Object.keys(actionDict).length === 0) {
             cc.log("Skip Turn");
@@ -94,9 +106,6 @@ const Player = cc.Node.extend({
         eventChannel.addListener("Object Tap", executeIfIdxValid);
     },
 
-    // genActionDict: function(){
-        //},
-
     requestRelease: function() {
         if (this.idleHorses.length === 0) {
             cc.log("Cannot Release: Home is empty");
@@ -116,10 +125,6 @@ const Player = cc.Node.extend({
 
         const movedData = 
             nonGoalHorses
-                // .map(horse => ({
-                //     horse: horse, 
-                //     maybeMovedIdx: this.playgroundState.requestMoveIdx(horse.posIdx, steps) 
-                // }));
                 .map(horse => {
                     const maybeMovedIdx = this.playgroundState.requestMoveIdx(horse.posIdx, steps);
 
@@ -137,8 +142,41 @@ const Player = cc.Node.extend({
                     }
                 });
 
-        // return movedData.length === 0 ? None() : Some(movedData);  
         return Some(movedData); 
+    },
+
+    requestEndToGoalMove: function(idxToMove) {
+        if (this.endPosHorse === null) {
+            cc.log("No horse at end platform");
+            return None();
+        }
+
+        for (i = idxToMove - 1; i >= 0; i--) {
+            if (this.goalLine[i] === null) {
+                continue;
+            }
+
+            cc.log("Other horses are in the goal way");
+            return None();
+        }
+        
+        return Some(this.playgroundState.getGoalPlatformIdx(this.idx, idxToMove));
+    },
+
+    requestGoalMove: function(diceVal) {
+        const toIdx = diceVal - 1;
+
+        if (this.goalLine[toIdx] !== null) {
+            return None();
+        }
+
+        for (i = toIdx - 1; i >= 0; i--) {
+            if (this.goalLine[i] !== null) {
+                return Some({ fromIdx: i, toIdx: this.playgroundState.getGoalPlatformIdx(this.idx, toIdx) });
+            }        
+        }
+
+        return None();
     },
 
     release: function(releaseIdx) {
@@ -155,6 +193,11 @@ const Player = cc.Node.extend({
     move: function(horse, movedIdx, steps) {
         this.playgroundState.onMove(horse.posIdx, movedIdx);
         horse.move(this.playgroundState.getPlatformPos(movedIdx), movedIdx, steps);
+
+        if (horse.moveDist === 48) {
+            this.endPosHorse = horse;
+        }
+
         eventChannel.raise("Other Move", { playerIdx: this.idx, movedIdx: movedIdx });
     },
 
@@ -168,6 +211,34 @@ const Player = cc.Node.extend({
             this.idleHorses.push(idleHorse);
             this.activeHorses.splice(this.activeHorses.indexOf(activeHorse), 1);
         });       
+    },
+
+    endToGoalMove: function(movedIdx) {
+        // cc.log("End to Goal Idx: " + movedIdx);
+        this.goalLine[movedIdx] = this.endPosHorse.horse;
+        this.endPosHorse.setSpritePos(this.playgroundState.getGoalPlatformPos(this.idx, movedIdx));
+        this.playgroundState.setPosIdx(this.endPosHorse.posIdx, false);
+        this.activeHorses.splice(this.activeHorses.indexOf(this.endPosHorse), 1);
+        this.endPosHorse = null;
+    },
+
+    goalLineMove: function(fromIdx, toIdx) {
+        cc.log("Goal Line Move from: " + fromIdx + " to: " + toIdx);
+        this.goalLine[fromIdx].setSpritePos(this.playgroundState.getGoalPlatformPos(this.idx, toIdx));
+        this.goalLine[toIdx] = this.goalLine[fromIdx];
+        this.goalLine[fromIdx] = null;
+        this.checkAndDeclareVictory();
+    },
+
+    checkAndDeclareVictory: function() {
+        for (i = 2; i < this.goalLine.length; i++) {
+            if (this.goalLine[i] === null) {
+                return;
+            }
+        }
+
+        cc.log("Victory Player: " + this.idx);
+        eventChannel.raise("Victory", { playerId: this.idx });
     }
 });
 
@@ -198,7 +269,7 @@ const Horse = cc.Node.extend({
 
     setSpritePos: function(newPos) { 
         this.sprite.setPositionX(newPos.x);
-        this.sprite.setPositionY(newPos.y);
+        this.sprite.setPositionY(newPos.y + 10 * SpriteConfig.BASE_SCALE);
     }
 });
 
@@ -208,8 +279,7 @@ function ActiveHorse(horse, startPos, startPosIdx) {
     this.horse = horse;
 
     this.setSpritePos = (movedPos) => {
-        const offsetReleasePos = cc.p(movedPos.x, movedPos.y + 10 * SpriteConfig.BASE_SCALE);
-        this.horse.setSpritePos(offsetReleasePos);
+        this.horse.setSpritePos(movedPos);
     };
     
     this.setSpritePos(startPos);

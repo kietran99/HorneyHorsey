@@ -23,6 +23,14 @@ const PlaygroundState = cc.Node.extend({
 
 	getPlatformPos: function(platformIdx) { return this.playground.platformPositions[platformIdx]; },
 
+	getGoalPlatformPos: function(playerIdx, platformIdx) { 
+		return this.playground.goalLinesPfPosition[playerIdx][platformIdx]; 
+	},
+
+	getGoalPlatformIdx: function(playerIdx, platformIdx) { 
+		return this.playground.getGoalPfIdx(playerIdx, platformIdx); 
+	},
+
 	requestReleaseIdx: function(playerIdx) {
 		const releaseIdx = this.getReleaseIdx(playerIdx);
 		return this.platformsOccupationList[releaseIdx] ? None() : Some(releaseIdx);
