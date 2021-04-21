@@ -8,10 +8,10 @@ const Player = cc.Node.extend({
     playgroundState: null,
 
     idleHorses: [],
-    activeHorses: [],
+    activeHorses: null,
 
     startHomePos: [],
-    releasePosIdx: null,
+    emptyHomePos: null,
 
     ctor: function(playgroundState, horseColor) {
         this._super();
@@ -30,43 +30,48 @@ const Player = cc.Node.extend({
             cc.p(homePos.x + xOffset, homePos.y + centreOffset + yOffset)
         ];
 
+        this.emptyHomePos = [];
+
         this.idleHorses = [...Array(this.N_HORSES).keys()].map(idx => new Horse(this.startHomePos[idx], horseColor));
-        this.idleHorses.map(horse => this.addChild(horse, 0));
+        this.idleHorses.forEach(horse => this.addChild(horse, 0));
+
+        this.activeHorses = [];
+
+        eventChannel.addListener("Dice Roll", 
+            diceData => (diceData.playerIdx === this.idx) && this.listenToTouchEvent(diceData.val));
         
-        this.activeHorses = []; 
-
-        this.releasePosIdx = this.playgroundState.getReleaseIdx(this.idx);
-
-        eventChannel.addListener("Dice Roll", diceData => (diceData.playerIdx === this.idx) && this.listenToTouchEvent(diceData.val));
+        eventChannel.addListener("Other Move", 
+            movedData => (movedData.playerIdx !== this.idx) && this.onOtherMove(movedData.movedIdx));
 
         return true;
     },
 
     listenToTouchEvent: function(diceVal) {
-        let actionDict = {};
+        const actionDict = {};
 
         if (diceVal == 1 || diceVal == 6) {
             const maybeReleaseIdx = this.requestRelease();
 
             maybeReleaseIdx
                 .match({
-                    Some: (releaseIdx) => actionDict[this.playgroundState.getHomeIdx(this.idx)] = () => this.release(),
+                    Some: (releaseIdx) => actionDict[this.playgroundState.getHomeIdx(this.idx)] = () => this.release(releaseIdx),
                     None: () => cc.log("Cannot Release: Release position is blocked")
                 });
         }
 
         if (this.activeHorses.length > 0) {
-            const movedData = this.requestMoveData(diceVal);
+            const maybeMovedData = this.requestMoveData(diceVal);
 
-            movedData
-                .forEach(data => {
-                    data.maybeMovedIdx.map(movedIdx => actionDict[movedIdx] = () => this.move(data.horse, diceVal))
-                });
+            maybeMovedData
+                .map(movedData => movedData.forEach(data => 
+                    data.maybeMovedIdx.map(movedIdx => 
+                        actionDict[movedIdx] = () => this.move(data.horse, movedIdx, diceVal))));
         }
 
         // TODO Goal actionDict
 
         if (Object.keys(actionDict).length === 0) {
+            cc.log("Skip Turn");
             setTimeout(() => eventChannel.raise("Turn End", {}), 2000);  
             return;       
         }
@@ -109,39 +114,59 @@ const Player = cc.Node.extend({
             return None();
         }
 
-        const movedData = nonGoalHorses
-                            .map(horse => ({
-                                horse: horse, 
-                                maybeMovedIdx: this.playgroundState.requestMoveIdx(horse.posIdx, steps) 
-                            }));
+        const movedData = 
+            nonGoalHorses
+                // .map(horse => ({
+                //     horse: horse, 
+                //     maybeMovedIdx: this.playgroundState.requestMoveIdx(horse.posIdx, steps) 
+                // }));
+                .map(horse => {
+                    const maybeMovedIdx = this.playgroundState.requestMoveIdx(horse.posIdx, steps);
 
-        return movedData.length === 0 ? None() : movedData;   
+                    const isTeammateAtMovedPos = 
+                        maybeMovedIdx.match({
+                            Some: movedIdx => this.activeHorses.some(horse => horse.posIdx === movedIdx),
+                            None: () => false
+                        });
+
+                    cc.log("Is Teammate At Moved Pos: " + isTeammateAtMovedPos);
+
+                    return {
+                        horse: horse,
+                        maybeMovedIdx: isTeammateAtMovedPos ? None() : maybeMovedIdx
+                    }
+                });
+
+        // return movedData.length === 0 ? None() : Some(movedData);  
+        return Some(movedData); 
     },
 
-    release: function() {
+    release: function(releaseIdx) {
         const horse = new ActiveHorse(
                         this.idleHorses.shift(), 
                         this.playgroundState.getReleasePos(this.idx),
-                        this.releasePosIdx);
+                        releaseIdx);
 
+        this.emptyHomePos.push(this.startHomePos.shift());
         this.activeHorses.push(horse);
         this.playgroundState.onRelease(this.idx);
     },
 
-    move: function(horse, steps) {
-        this.playgroundState.onMove(horse.posIdx, this.movedIdx(horse.posIdx, steps));
-        horse.move(this.playgroundState.getPlatformPos(this.movedIdx(horse.posIdx, steps)), steps);
+    move: function(horse, movedIdx, steps) {
+        this.playgroundState.onMove(horse.posIdx, movedIdx);
+        horse.move(this.playgroundState.getPlatformPos(movedIdx), movedIdx, steps);
+        eventChannel.raise("Other Move", { playerIdx: this.idx, movedIdx: movedIdx });
     },
 
-    movedIdx: function(curIdx, steps) {
-        return curIdx + steps - (curIdx + steps >= 48 ? 48 : 0);
-    },
-
-    onOtherMove: (otherPosIdx) => {
-        const horseToKick = find(this.activeHorses, horse => horse.posIdx === otherPosIdx);
-        horseToKick.map(horse => {
-            this.idleHorses.push(horseToKick.horse);
-            this.activeHorses = this.activeHorses.splice(horse, 1);
+    onOtherMove: function(otherPosIdx) {
+        const maybeHorseToKick = find(this.activeHorses, horse => horse.posIdx === otherPosIdx);
+        maybeHorseToKick.map(activeHorse => {
+            const idleHorse = activeHorse.horse;
+            const homePos = this.emptyHomePos.shift();
+            idleHorse.setSpriteHomePos(homePos);
+            this.startHomePos.push(homePos);
+            this.idleHorses.push(idleHorse);
+            this.activeHorses.splice(this.activeHorses.indexOf(activeHorse), 1);
         });       
     }
 });
@@ -166,6 +191,11 @@ const Horse = cc.Node.extend({
         return true;
     },
 
+    setSpriteHomePos: function(nonOffsetHomePos) {
+        this.sprite.setPositionX(nonOffsetHomePos.x + 8 * SpriteConfig.BASE_SCALE);
+        this.sprite.setPositionY(nonOffsetHomePos.y + 14 * SpriteConfig.BASE_SCALE);
+    },
+
     setSpritePos: function(newPos) { 
         this.sprite.setPositionX(newPos.x);
         this.sprite.setPositionY(newPos.y);
@@ -177,19 +207,18 @@ function ActiveHorse(horse, startPos, startPosIdx) {
     this.moveDist = 1;
     this.horse = horse;
 
-    this.setSpritePos = (movePos) => {
-        const offsetReleasePos = cc.p(movePos.x, movePos.y + 10 * SpriteConfig.BASE_SCALE);
+    this.setSpritePos = (movedPos) => {
+        const offsetReleasePos = cc.p(movedPos.x, movedPos.y + 10 * SpriteConfig.BASE_SCALE);
         this.horse.setSpritePos(offsetReleasePos);
     };
     
     this.setSpritePos(startPos);
 
-    this.move = (movePos, steps) => {
-        this.posIdx += steps;
-        this.posIdx = this.posIdx - (this.posIdx > 48 ? 48 : 0);
+    this.move = (movedPos, movedIdx, steps) => {
+        this.posIdx = movedIdx;
         this.moveDist += steps;
-        // cc.log("Move Dist: " + this.moveDist);
-        this.setSpritePos(movePos);
+        cc.log("Move Dist: " + this.moveDist);
+        this.setSpritePos(movedPos);
     };
 };
 

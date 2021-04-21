@@ -29,31 +29,28 @@ const PlaygroundState = cc.Node.extend({
 	},
 
 	requestMoveIdx: function(curIdx, steps) {
-		cc.log("Cur Idx: " + curIdx + " Steps: " + steps);
-		const areObstaclesInTheWay = (pfOccList, curIdx, steps) => {
-			var idx = curIdx;
-
-			for (i = 0; i < steps - 1; i++) {
-				idx = idx == 47 ? 0 : idx + 1;
-				
-				if (pfOccList[idx])
-				{
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		if (areObstaclesInTheWay(this.platformsOccupationList, curIdx, steps)) {
-			return None();
-		}
-
-		const movedIdx = curIdx + steps - (curIdx + steps >= 48 ? 48 : 0);
-		cc.log("Moved Idx: " + movedIdx);
-		// return this.platformsOccupationList[movedIdx] ? None() : Some(movedIdx);
-		return Some(movedIdx);
+		// cc.log("Request Move: Cur Idx: " + curIdx + " Steps: " + steps);
+		return this.areObstaclesInTheWay(this.platformsOccupationList, curIdx, steps) 
+			? None() 
+			: Some(this.getMovedIdx(curIdx, steps));
 	},
+
+	areObstaclesInTheWay: function(pfOccList, curIdx, steps) {
+		var idx = curIdx;
+
+		for (i = 0; i < steps - 1; i++) {
+			idx = idx == 47 ? 0 : idx + 1;
+			
+			if (pfOccList[idx])
+			{
+				return true;
+			}
+		}
+
+		return false;
+	},
+
+	getMovedIdx: function(curIdx, steps) { return curIdx + steps - (curIdx + steps >= 48 ? 48 : 0); },
 
 	onRelease: function(playerIdx) {
 		cc.log("Release Idx: " + this.getReleaseIdx(playerIdx));

@@ -62,8 +62,8 @@ const Dice = cc.Node.extend({
 	},
 
 	roll: function(colorIdx) {
-		cc.log("Roll Dice");
 		const res = Math.floor(Math.random() * 6) + 1;
+		cc.log("Roll Dice: " + res);
 		this.digitSprite.color = cc.color(this.colors[colorIdx]);
 		this.digitSprite.setTexture(this.res.diceDigit_png(res));
 		return res;
