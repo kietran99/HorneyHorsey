@@ -90,11 +90,15 @@ const Player = cc.Node.extend({
                     
         }
 
-        this.requestEndToGoalMove(diceVal - 1).map(goalPfIdx => 
-            actionDict[goalPfIdx] = () => this.endToGoalMove(diceVal - 1));
+        this.requestEndToGoalMove(diceVal - 1).map(goalPfIdx => {
+            this.moveIndicator.showGoal(this.idx, diceVal - 1);
+            actionDict[goalPfIdx] = () => this.endToGoalMove(diceVal - 1);
+        });
 
-        this.requestGoalMove(diceVal).map(idxData =>
-            actionDict[idxData.toIdx] = () => this.goalLineMove(idxData.fromIdx, diceVal - 1));
+        this.requestGoalMove(diceVal).map(idxData => {
+            this.moveIndicator.showGoal(this.idx, diceVal - 1);
+            actionDict[idxData.toIdx] = () => this.goalLineMove(idxData.fromIdx, diceVal - 1);
+        });
 
         if (Object.keys(actionDict).length === 0) {
             cc.log("Skip Turn");

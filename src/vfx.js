@@ -10,7 +10,7 @@ const MoveIndicator = cc.Node.extend({
 		this.hiddenIndicators = makeArray(
 			nIndicators, 
 			idx => drawScaleSprite(res.Move_Indicator_png, 
-            { 
+            {
                 x: 0,
                 y: 0,
                 scale: SpriteConfig.BASE_SCALE
@@ -38,6 +38,13 @@ const MoveIndicator = cc.Node.extend({
 		const indicator = this.hiddenIndicators.pop();
 		indicator.setVisible(true);
 		indicator.setPosition(this.playgroundState.getPlatformPos(platformIdx));
+		this.shownIndicators.push(indicator);
+	},
+
+	showGoal: function(playerIdx, goalPfIdx) {
+		const indicator = this.hiddenIndicators.pop();
+		indicator.setVisible(true);
+		indicator.setPosition(this.playgroundState.getGoalPlatformPos(playerIdx, goalPfIdx));
 		this.shownIndicators.push(indicator);
 	}
 });
