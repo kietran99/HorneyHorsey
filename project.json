@@ -23,6 +23,7 @@
         "src/player.js",
         "src/UI.js",
         "src/turn-manager.js",
+        "src/vfx.js",
         "src/app.js"
     ]
 }

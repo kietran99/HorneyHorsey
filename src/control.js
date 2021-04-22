@@ -1,7 +1,7 @@
 const ControlLayer = cc.Layer.extend({
     playground: null,
 
-    ctor: function(playground, player) {
+    ctor: function(playground) {
         this._super();
 
         this.playground = playground;

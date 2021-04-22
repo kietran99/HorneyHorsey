@@ -18,7 +18,9 @@ const Player = cc.Node.extend({
     goalLine: null,
     goalMovable: null,
 
-    ctor: function(playgroundState, horseColor) {
+    moveIndicator: null,
+
+    ctor: function(playgroundState, horseColor, moveIndicator) {
         this._super();
         
         this.idx = nextPlayerIdx++;
@@ -45,8 +47,17 @@ const Player = cc.Node.extend({
         this.goalLine = [...Array(this.N_GOAL_PLATFORMS).keys()].map(idx => null);
         this.goalMovable = false;
 
+        this.moveIndicator = moveIndicator;
+
         eventChannel.addListener("Dice Roll", 
-            diceData => (diceData.playerIdx === this.idx) && this.listenToTouchEvent(diceData.val));
+            diceData => {
+                if (diceData.playerIdx !== this.idx) {
+                    return;
+                } 
+
+                this.moveIndicator.reset();
+                this.listenToTouchEvent(diceData.val);
+            });
         
         eventChannel.addListener("Other Move", 
             movedData => (movedData.playerIdx !== this.idx) && this.onOtherMove(movedData.movedIdx));
@@ -67,13 +78,16 @@ const Player = cc.Node.extend({
                 });
         }
 
-        if (this.activeHorses.length > 0) {
+        if (this.activeHorses.length > 0) {      
             const maybeMovedData = this.requestMoveData(diceVal);
 
             maybeMovedData
                 .map(movedData => movedData.forEach(data => 
-                    data.maybeMovedIdx.map(movedIdx => 
-                        actionDict[movedIdx] = () => this.move(data.horse, movedIdx, diceVal))));
+                    data.maybeMovedIdx.map(movedIdx => {
+                        this.moveIndicator.show(movedIdx);
+                        actionDict[movedIdx] = () => this.move(data.horse, movedIdx, diceVal);
+                    })));
+                    
         }
 
         this.requestEndToGoalMove(diceVal - 1).map(goalPfIdx => 

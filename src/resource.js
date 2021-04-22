@@ -63,7 +63,9 @@ var res = {
     
     diceDigit_png: function(digit) {
         return (digit > 0 && digit < 7) ? this.DiceDigit_pngs[digit - 1] : this.DiceDigit_pngs[0];
-    }
+    },
+
+    Move_Indicator_png: RES_ROOT + "Move_Indicator.png"
 };
 
 var g_resources = [];

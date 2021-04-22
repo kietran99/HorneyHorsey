@@ -29,9 +29,11 @@ var HelloWorldScene = cc.Scene.extend({
 
         const playground = new Playground();
         const playgroundState = new PlaygroundState(playground);
+
+        const moveIndicator = new MoveIndicator(4, playgroundState);
         
         const playersColor = ['#f4ff75', '#65ff92', '#ff9a70', '#4efafa'];
-        const players = playersColor.map((color, idx) => new Player(playgroundState, color));
+        const players = playersColor.map((color, idx) => new Player(playgroundState, color, moveIndicator));
 
         const UI = new UICanvas(playground.platformColors);
         const turnManager = new TurnManager(players.map(player => player.idx), UI);
@@ -40,8 +42,9 @@ var HelloWorldScene = cc.Scene.extend({
         this.addChild(playgroundState);
         players.forEach(player => this.addChild(player));
         this.addChild(UI); 
-        this.addChild(new ControlLayer(playground, players[0]));
+        this.addChild(new ControlLayer(playground));
         this.addChild(turnManager);
+        this.addChild(moveIndicator);
     }
 });
 
